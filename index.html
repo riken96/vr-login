@@ -1,83 +1,65 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Google Login for VR</title>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin-top: 50px;
-    }
-    #googleButton {
-      margin-bottom: 30px;
-    }
-    #tokenBox {
-      font-family: monospace;
-      color: #d32f2f;
-    }
-  </style>
-</head>
-<body>
-  <h2>Sign In With Google</h2>
-  <div id="googleButton"></div>
+  <head>
+    <title>Google Login for VR</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin-top: 60px;
+      }
+      #tokenBox {
+        font-family: monospace;
+        color: crimson;
+      }
+    </style>
+    <script>
+      const BACKEND_URL = "https://vr-login-backend.onrender.com/createToken"; // ✅ Your backend
 
-  <h3>Firebase Token:</h3>
-  <pre id="tokenBox">Waiting for login...</pre>
+      function handleCredentialResponse(response) {
+        const idToken = response.credential;
 
-  <script>
-    // ✅ Replace with your actual Firebase Config
-    const firebaseConfig = {
-      apiKey: "AIzaSyD0F9dPtiGQNGwp1-0i8itXbwm2l07XwOk",
-      authDomain: "vrsimulator-f6cb4.firebaseapp.com"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-
-    // 👇 Google Sign-In Button Setup
-    google.accounts.id.initialize({
-      client_id: "70239701778-gupkaufc3l196psvh7cd1smpj1feql62.apps.googleusercontent.com",
-      callback: handleCredentialResponse
-    });
-
-    google.accounts.id.renderButton(
-      document.getElementById("googleButton"),
-      { theme: "outline", size: "large" }
-    );
-
-    async function handleCredentialResponse(response) {
-      const idToken = response.credential;
-
-      try {
-        // Exchange Google ID token for Firebase custom token
-        const res = await fetch("https://vr-login-backend.onrender.com/createToken", {
+        // Call backend to exchange for Firebase custom token
+        fetch(BACKEND_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ idToken })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.token) {
+            localStorage.setItem("firebaseToken", data.token);
+            document.getElementById("tokenBox").innerText = data.token;
+            document.getElementById("tokenBox").style.color = "green";
+          } else {
+            throw new Error("Token creation failed.");
+          }
+        })
+        .catch(err => {
+          console.error("❌ Token error:", err);
+          document.getElementById("tokenBox").innerText = "❌ Token creation failed.";
+          document.getElementById("tokenBox").style.color = "crimson";
+        });
+      }
+
+      window.onload = () => {
+        google.accounts.id.initialize({
+          client_id: "70239701778-gupkaufc3l196psvh7cd1smpj1feql62.apps.googleusercontent.com",
+          callback: handleCredentialResponse
         });
 
-        const data = await res.json();
-        if (res.ok) {
-          document.getElementById("tokenBox").innerText = data.token;
-
-          // Sign in to Firebase using custom token (optional)
-          firebase.auth().signInWithCustomToken(data.token)
-            .then(user => {
-              console.log("✅ Firebase sign-in success:", user.user.uid);
-            })
-            .catch(err => {
-              console.error("❌ Firebase login error", err);
-            });
-        } else {
-          throw new Error(data.error || "Token creation failed.");
-        }
-      } catch (err) {
-        console.error("❌ Token creation failed:", err);
-        document.getElementById("tokenBox").innerText = "❌ Token creation failed.";
-      }
-    }
-  </script>
-</body>
+        google.accounts.id.renderButton(
+          document.getElementById("googleButton"),
+          { theme: "outline", size: "large" }
+        );
+      };
+    </script>
+  </head>
+  <body>
+    <h2>Sign In With Google</h2>
+    <div id="googleButton"></div>
+    <h3>Firebase Token:</h3>
+    <pre id="tokenBox">Waiting for login...</pre>
+  </body>
 </html>
