@@ -63,7 +63,12 @@
           });
 
           const data = await response.json();
-          tokenBox.innerText = data.token || data.error || "No token returned";
+        if (data.token) {
+        localStorage.setItem("firebaseToken", data.token);
+        window.location.href = "https://riken96.github.io/vr-login/close.html"; // ✅ auto-redirect
+         } else {
+         tokenBox.innerText = data.error || "No token returned";
+        }
         } catch (err) {
           console.error("❌ Login Error:", err);
           tokenBox.innerText = "❌ Login failed.";
