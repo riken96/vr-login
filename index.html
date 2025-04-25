@@ -1,74 +1,36 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Google Login for VR</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        text-align: center;
-        padding-top: 100px;
-      }
-      #googleButton {
-        margin-bottom: 20px;
-      }
-      #tokenBox {
-        font-family: monospace;
-        color: crimson;
-      }
-    </style>
-  </head>
-  <body>
-    <h2>Sign In With Google</h2>
-    <div id="googleButton"></div>
-    <h3>Firebase Token:</h3>
-    <pre id="tokenBox">Waiting for login...</pre>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    <script>
-      const BACKEND_URL = "https://vr-login-backend.onrender.com/createToken";
+  const firebaseConfig = {
+    apiKey: "AIzaSyD0F9dPtiGQNGwp1-0i8itXbwm2l07XwOk",
+    authDomain: "vrsimulator-f6cb4.firebaseapp.com",
+    projectId: "vrsimulator-f6cb4",
+    storageBucket: "vrsimulator-f6cb4.appspot.com",
+    messagingSenderId: "796595785111",
+    appId: "1:796595785111:web:958ea8ae7606bdde1b48d2"
+  };
 
-      function handleCredentialResponse(response) {
-        const idToken = response.credential;
-        console.log("Google ID token received:", idToken);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
 
-        document.getElementById("tokenBox").innerText = "⏳ Logging in...";
+  document.getElementById("loginBtn").addEventListener("click", async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
 
-        fetch(BACKEND_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ idToken })
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.token) {
-            localStorage.setItem("firebaseToken", data.token);
-            document.getElementById("tokenBox").innerText = data.token;
-            document.getElementById("tokenBox").style.color = "green";
-          } else {
-            document.getElementById("tokenBox").innerText = "❌ Token creation failed.";
-            document.getElementById("tokenBox").style.color = "crimson";
-            console.error("❌ Firebase token creation error:", data);
-          }
-        })
-        .catch(err => {
-          console.error("❌ Network error:", err);
-          document.getElementById("tokenBox").innerText = "❌ Network error.";
-          document.getElementById("tokenBox").style.color = "crimson";
-        });
-      }
+      // Send to your backend
+      const res = await fetch("https://vr-login-backend.onrender.com/createToken", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken })
+      });
 
-      window.onload = () => {
-        google.accounts.id.initialize({
-          client_id: "796595785111-n4m8gsegsvnjmd8ijq1r5jjtlskjkk9h.apps.googleusercontent.com",
-          callback: handleCredentialResponse
-        });
-
-        google.accounts.id.renderButton(
-          document.getElementById("googleButton"),
-          { theme: "outline", size: "large" }
-        );
-      };
-    </script>
-  </body>
-</html>
+      const data = await res.json();
+      console.log("✅ Firebase Token:", data);
+    } catch (err) {
+      console.error("❌ Error:", err);
+    }
+  });
+</script>
