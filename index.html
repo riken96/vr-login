@@ -1,36 +1,73 @@
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>VR Login (Firebase)</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+      import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyD0F9dPtiGQNGwp1-0i8itXbwm2l07XwOk",
-    authDomain: "vrsimulator-f6cb4.firebaseapp.com",
-    projectId: "vrsimulator-f6cb4",
-    storageBucket: "vrsimulator-f6cb4.appspot.com",
-    messagingSenderId: "796595785111",
-    appId: "1:796595785111:web:958ea8ae7606bdde1b48d2"
-  };
+      const firebaseConfig = {
+        apiKey: "AIzaSyD0F9dPtiGQNGwp1-0i8itXbwm2l07XwOk",
+        authDomain: "vrsimulator-f6cb4.firebaseapp.com",
+        projectId: "vrsimulator-f6cb4",
+        storageBucket: "vrsimulator-f6cb4.appspot.com",
+        messagingSenderId: "796595785111",
+        appId: "1:796595785111:web:958ea8ae7606bdde1b48d2"
+      };
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const provider = new GoogleAuthProvider();
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const provider = new GoogleAuthProvider();
 
-  document.getElementById("loginBtn").addEventListener("click", async () => {
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const idToken = await result.user.getIdToken();
+      window.onload = () => {
+        const loginBtn = document.getElementById("loginBtn");
+        const tokenBox = document.getElementById("tokenBox");
 
-      // Send to your backend
-      const res = await fetch("https://vr-login-backend.onrender.com/createToken", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken })
-      });
+        loginBtn.addEventListener("click", async () => {
+          try {
+            const result = await signInWithPopup(auth, provider);
+            const idToken = await result.user.getIdToken();
 
-      const data = await res.json();
-      console.log("✅ Firebase Token:", data);
-    } catch (err) {
-      console.error("❌ Error:", err);
-    }
-  });
-</script>
+            tokenBox.innerText = "Sending token to backend...";
+            const response = await fetch("https://vr-login-backend.onrender.com/createToken", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ idToken })
+            });
+
+            const data = await response.json();
+            tokenBox.innerText = data.token || data.error || "No token returned";
+          } catch (err) {
+            console.error("❌ Login Error:", err);
+            tokenBox.innerText = "❌ Login failed.";
+          }
+        });
+      };
+    </script>
+    <style>
+      body {
+        font-family: sans-serif;
+        text-align: center;
+        padding: 100px;
+      }
+
+      button {
+        padding: 12px 24px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+
+      pre {
+        margin-top: 30px;
+        color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Sign In With Google (via Firebase)</h2>
+    <button id="loginBtn">Sign In with Google</button>
+    <pre id="tokenBox">Waiting for login...</pre>
+  </body>
+</html>
