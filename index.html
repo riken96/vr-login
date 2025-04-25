@@ -30,7 +30,7 @@
 
       function handleCredentialResponse(response) {
         const idToken = response.credential;
-        console.log("✅ Google ID Token received:", idToken.substring(0, 30) + "...");
+        console.log("Google ID token received:", idToken);
 
         document.getElementById("tokenBox").innerText = "⏳ Logging in...";
 
