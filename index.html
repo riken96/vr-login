@@ -65,7 +65,7 @@
           const data = await response.json();
         if (data.token) {
         localStorage.setItem("firebaseToken", data.token);
-        window.location.href = "https://riken96.github.io/vr-login/close.html"; // ✅ auto-redirect
+        window.location.href = "https://riken96.github.io/vr-login/success.html"; // ✅ auto-redirect
          } else {
          tokenBox.innerText = data.error || "No token returned";
         }
