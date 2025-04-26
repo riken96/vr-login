@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login Successful</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 100px;
+      background-color: #f9f9f9;
+    }
+
+    button {
+      margin-top: 30px;
+      padding: 15px 30px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>✅ Login Successful!</h2>
+  <p>Click below to return to the app.</p>
+
+  <button onclick="goBackToApp()">Return to App</button>
+
+  <script>
+    function goBackToApp() {
+      window.location.href = "vr://return"; // Oculus tries to switch back
+    }
+  </script>
+</body>
+</html>
