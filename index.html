@@ -29,7 +29,6 @@
   <button id="loginBtn">Sign In with Google</button>
   <pre id="tokenBox">Waiting for login...</pre>
 
-  <!-- ✅ Correct way to load Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 
@@ -50,12 +49,17 @@
     const loginBtn = document.getElementById("loginBtn");
     const tokenBox = document.getElementById("tokenBox");
 
-    loginBtn.addEventListener("click", async () => {
-      try {
-        const result = await auth.signInWithPopup(provider);
-        const idToken = await result.user.getIdToken();
+    loginBtn.addEventListener("click", () => {
+      tokenBox.innerText = "Redirecting to Google login...";
+      auth.signInWithRedirect(provider);
+    });
 
-        tokenBox.innerText = "Please Wait...";
+    // After Redirect, check if user signed in
+    window.onload = async () => {
+      const result = await auth.getRedirectResult();
+      if (result.user) {
+        const idToken = await result.user.getIdToken();
+        tokenBox.innerText = "Sending token...";
 
         const response = await fetch("https://vr-login-backend.onrender.com/createToken", {
           method: "POST",
@@ -70,11 +74,8 @@
         } else {
           tokenBox.innerText = data.error || "No token returned";
         }
-      } catch (err) {
-        console.error("❌ Login Error:", err);
-        tokenBox.innerText = "❌ Login failed.";
       }
-    });
+    };
   </script>
 </body>
 </html>
